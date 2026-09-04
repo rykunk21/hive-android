@@ -10,6 +10,7 @@ import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
+import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
 import androidx.glance.layout.*
@@ -38,18 +39,18 @@ fun HiveWidgetContent() {
     Row(
         modifier = GlanceModifier
             .fillMaxWidth()
-            .height(40.dp)
-            .background(ColorProvider(R.color.black))
-            .padding(4.dp),
+            .height(48.dp)
+            .padding(horizontal = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Up arrow button
         Box(
             modifier = GlanceModifier
-                .defaultWeight()
-                .fillMaxHeight()
+                .width(56.dp)
+                .height(36.dp)
                 .background(ColorProvider(R.color.white))
+                .cornerRadius(18.dp)
                 .clickable(actionStartActivity<MainActivity>()),
             contentAlignment = Alignment.Center
         ) {
@@ -61,14 +62,15 @@ fun HiveWidgetContent() {
             )
         }
 
-        Spacer(GlanceModifier.width(4.dp))
+        Spacer(GlanceModifier.width(6.dp))
 
         // Down arrow button
         Box(
             modifier = GlanceModifier
-                .defaultWeight()
-                .fillMaxHeight()
+                .width(56.dp)
+                .height(36.dp)
                 .background(ColorProvider(R.color.white))
+                .cornerRadius(18.dp)
                 .clickable(actionStartActivity<MainActivity>()),
             contentAlignment = Alignment.Center
         ) {
