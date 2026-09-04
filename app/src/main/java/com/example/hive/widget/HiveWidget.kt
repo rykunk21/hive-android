@@ -1,6 +1,7 @@
 package com.example.hive.widget
 
 import android.content.Context
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
