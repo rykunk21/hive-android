@@ -40,15 +40,18 @@ fun HiveWidgetContent() {
         modifier = GlanceModifier
             .fillMaxWidth()
             .height(48.dp)
-            .padding(horizontal = 20.dp),
+            .padding(horizontal = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Up arrow button
+        // 11% left spacer
+        Spacer(GlanceModifier.defaultWeight())
+
+        // Up arrow button (35%)
         Box(
             modifier = GlanceModifier
-                .width(56.dp)
-                .height(36.dp)
+                .defaultWeight()
+                .fillMaxHeight()
                 .background(ColorProvider(R.color.white))
                 .cornerRadius(18.dp)
                 .clickable(actionStartActivity<MainActivity>()),
@@ -62,13 +65,14 @@ fun HiveWidgetContent() {
             )
         }
 
-        Spacer(GlanceModifier.width(6.dp))
+        // 8% middle spacer
+        Spacer(GlanceModifier.defaultWeight())
 
-        // Down arrow button
+        // Down arrow button (35%)
         Box(
             modifier = GlanceModifier
-                .width(56.dp)
-                .height(36.dp)
+                .defaultWeight()
+                .fillMaxHeight()
                 .background(ColorProvider(R.color.white))
                 .cornerRadius(18.dp)
                 .clickable(actionStartActivity<MainActivity>()),
@@ -81,5 +85,8 @@ fun HiveWidgetContent() {
                 )
             )
         }
+
+        // 11% right spacer
+        Spacer(GlanceModifier.defaultWeight())
     }
 }
