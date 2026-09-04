@@ -38,9 +38,9 @@ fun HiveWidgetContent() {
     Row(
         modifier = GlanceModifier
             .fillMaxWidth()
-            .height(64.dp)
+            .height(40.dp)
             .background(ColorProvider(R.color.black))
-            .padding(8.dp),
+            .padding(4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -61,7 +61,7 @@ fun HiveWidgetContent() {
             )
         }
 
-        Spacer(GlanceModifier.width(8.dp))
+        Spacer(GlanceModifier.width(4.dp))
 
         // Down arrow button
         Box(
