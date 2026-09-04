@@ -20,45 +20,34 @@
         android:alpha="0.5"
         android:pathData="M54,18 L31,88 L91,45 L17,45 L77,88 Z" />
 
-    <!-- Top vertex dot -->
-    <circle
+    <!-- Vertex dots as filled paths (circles not supported in vector drawable) -->
+    <!-- Top vertex -->
+    <path
         android:fillColor="#000000"
-        android:cx="54"
-        android:cy="18"
-        android:r="5" />
+        android:pathData="M54,13a5,5 0 1,0 0,10a5,5 0 1,0 0,-10z" />
 
-    <!-- Top-right vertex dot -->
-    <circle
+    <!-- Top-right vertex -->
+    <path
         android:fillColor="#000000"
-        android:cx="91"
-        android:cy="45"
-        android:r="5" />
+        android:pathData="M91,40a5,5 0 1,0 0,10a5,5 0 1,0 0,-10z" />
 
-    <!-- Bottom-right vertex dot -->
-    <circle
+    <!-- Bottom-right vertex -->
+    <path
         android:fillColor="#000000"
-        android:cx="77"
-        android:cy="88"
-        android:r="5" />
+        android:pathData="M77,83a5,5 0 1,0 0,10a5,5 0 1,0 0,-10z" />
 
-    <!-- Bottom-left vertex dot -->
-    <circle
+    <!-- Bottom-left vertex -->
+    <path
         android:fillColor="#000000"
-        android:cx="31"
-        android:cy="88"
-        android:r="5" />
+        android:pathData="M31,83a5,5 0 1,0 0,10a5,5 0 1,0 0,-10z" />
 
-    <!-- Top-left vertex dot -->
-    <circle
+    <!-- Top-left vertex -->
+    <path
         android:fillColor="#000000"
-        android:cx="17"
-        android:cy="45"
-        android:r="5" />
+        android:pathData="M17,40a5,5 0 1,0 0,10a5,5 0 1,0 0,-10z" />
 
     <!-- Center dot -->
-    <circle
+    <path
         android:fillColor="#000000"
-        android:cx="54"
-        android:cy="56"
-        android:r="3.5" />
+        android:pathData="M54,52.5a3.5,3.5 0 1,0 0,7a3.5,3.5 0 1,0 0,-7z" />
 </vector>
