@@ -1,51 +1,28 @@
 package com.example.hive.ui.theme
 
-import android.app.Activity
-import android.os.Build
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
 
-private val DarkColorScheme = darkColorScheme(
-    primary = NeonCyan,
-    secondary = NeonPurple,
-    tertiary = NeonPink,
-    background = DarkBackground,
-    surface = CardBackground,
-    onPrimary = DarkBackground,
-    onSecondary = TextPrimary,
-    onTertiary = DarkBackground,
-    onBackground = TextPrimary,
-    onSurface = TextPrimary
-)
-
-private val LightColorScheme = darkColorScheme(
-    primary = NeonCyan,
-    secondary = NeonPurple,
-    tertiary = NeonPink,
-    background = DarkBackground,
-    surface = CardBackground,
-    onPrimary = DarkBackground,
-    onSecondary = TextPrimary,
-    onTertiary = DarkBackground,
-    onBackground = TextPrimary,
-    onSurface = TextPrimary
+private val LightColorScheme = lightColorScheme(
+    primary = Black,
+    secondary = Gray,
+    tertiary = DarkGray,
+    background = White,
+    surface = White,
+    onPrimary = White,
+    onSecondary = White,
+    onTertiary = White,
+    onBackground = Black,
+    onSurface = Black
 )
 
 @Composable
 fun HiveTheme(
-    darkTheme: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = DarkColorScheme
-
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = LightColorScheme,
         typography = Typography,
         content = content
     )

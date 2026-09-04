@@ -4,34 +4,24 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.background
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Computer
-import androidx.compose.material.icons.filled.Send
-import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.example.hive.model.*
-import com.example.hive.ui.theme.*
+import com.example.hive.ui.theme.Black
+import com.example.hive.ui.theme.Gray
+import com.example.hive.ui.theme.HiveTheme
+import com.example.hive.ui.theme.LightGray
+import com.example.hive.ui.theme.White
+import kotlin.math.cos
+import kotlin.math.sin
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,439 +29,164 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             HiveTheme {
-                HiveDashboard()
+                HiveScreen()
             }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun HiveDashboard() {
-    var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("TAILNET", "COMMANDS", "LOGS")
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            "◈ HIVE",
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = NeonCyan,
-                            letterSpacing = 2.sp,
-                            fontFamily = FontFamily.Monospace
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            "TAILNET",
-                            fontSize = 14.sp,
-                            color = TextSecondary,
-                            letterSpacing = 4.sp
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = DarkBackground
-                )
-            )
-        },
-        bottomBar = {
-            NavigationBar(
-                containerColor = CardBackground,
-                tonalElevation = 0.dp
-            ) {
-                tabs.forEachIndexed { index, title ->
-                    NavigationBarItem(
-                        selected = selectedTab == index,
-                        onClick = { selectedTab = index },
-                        icon = {
-                            when (index) {
-                                0 -> Icon(Icons.Default.Computer, contentDescription = null)
-                                1 -> Icon(Icons.Default.Send, contentDescription = null)
-                                2 -> Icon(Icons.Default.Terminal, contentDescription = null)
-                            }
-                        },
-                        label = { Text(title, fontSize = 10.sp) },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = NeonCyan,
-                            selectedTextColor = NeonCyan,
-                            unselectedIconColor = TextSecondary,
-                            unselectedTextColor = TextSecondary,
-                            indicatorColor = NeonPurple.copy(alpha = 0.3f)
-                        )
-                    )
-                }
-            }
-        },
-        containerColor = DarkBackground
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
-            when (selectedTab) {
-                0 -> TailnetTab()
-                1 -> CommandsTab()
-                2 -> LogsTab()
-            }
-        }
-    }
+// 5 configurable vertex states
+enum class VertexState {
+    OFFLINE,      // empty
+    CONNECTING,   // small dot
+    ONLINE,       // filled dot
+    ACTIVE,       // large dot
+    ERROR         // ring
 }
 
 @Composable
-fun TailnetTab() {
-    val localDevice = remember { getLocalTailnetInfo() }
-    val peers = remember { getSamplePeers() }
-
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        item {
-            Text(
-                "LOCAL DEVICE",
-                fontSize = 12.sp,
-                color = TextSecondary,
-                letterSpacing = 2.sp,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            DeviceCard(device = localDevice, isLocal = true)
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                "CONNECTED PEERS (${peers.count { it.status == DeviceStatus.ONLINE }}/${peers.size})",
-                fontSize = 12.sp,
-                color = TextSecondary,
-                letterSpacing = 2.sp,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-        }
-        items(peers) { device ->
-            DeviceCard(device = device, isLocal = false)
-        }
+fun HiveScreen() {
+    // Local state for the 5 vertices - wire to real data later
+    var vertexStates by remember {
+        mutableStateOf(List(5) { VertexState.OFFLINE })
     }
-}
-
-@Composable
-fun DeviceCard(device: TailnetDevice, isLocal: Boolean) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBackground)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(10.dp)
-                    .clip(RoundedCornerShape(50))
-                    .background(
-                        when (device.status) {
-                            DeviceStatus.ONLINE -> StatusOnline
-                            DeviceStatus.OFFLINE -> StatusOffline
-                            DeviceStatus.UNKNOWN -> TextSecondary
-                        }
-                    )
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = device.name,
-                    color = TextPrimary,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = device.tailscaleIP,
-                    color = NeonCyan,
-                    fontSize = 13.sp,
-                    fontFamily = FontFamily.Monospace
-                )
-            }
-            Column(horizontalAlignment = Alignment.End) {
-                Text(
-                    text = device.os.uppercase(),
-                    color = TextSecondary,
-                    fontSize = 11.sp,
-                    letterSpacing = 1.sp
-                )
-                if (!isLocal) {
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = device.lastSeen,
-                        color = TextSecondary,
-                        fontSize = 11.sp
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun CommandsTab() {
-    var targetIP by remember { mutableStateOf("") }
-    var commandType by remember { mutableStateOf("") }
-    var payload by remember { mutableStateOf("") }
-    var sentCommands by remember { mutableStateOf(listOf<TailnetCommand>()) }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        Text(
-            "SEND COMMAND",
-            fontSize = 12.sp,
-            color = TextSecondary,
-            letterSpacing = 2.sp,
-            fontWeight = FontWeight.Bold
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-
-        OutlinedTextField(
-            value = targetIP,
-            onValueChange = { targetIP = it },
-            label = { Text("Target IP (e.g. 100.x.x.x)", color = TextSecondary) },
-            modifier = Modifier.fillMaxWidth(),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = NeonCyan,
-                unfocusedBorderColor = TextSecondary.copy(alpha = 0.3f),
-                focusedTextColor = TextPrimary,
-                unfocusedTextColor = TextPrimary
-            ),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-            singleLine = true
+        // Pentagon state visualizer
+        PentagonVisualizer(
+            states = vertexStates,
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(40.dp))
 
-        OutlinedTextField(
-            value = commandType,
-            onValueChange = { commandType = it },
-            label = { Text("Command Type", color = TextSecondary) },
-            modifier = Modifier.fillMaxWidth(),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = NeonCyan,
-                unfocusedBorderColor = TextSecondary.copy(alpha = 0.3f),
-                focusedTextColor = TextPrimary,
-                unfocusedTextColor = TextPrimary
-            ),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-            singleLine = true
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = payload,
-            onValueChange = { payload = it },
-            label = { Text("Payload / Args", color = TextSecondary) },
-            modifier = Modifier.fillMaxWidth(),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = NeonCyan,
-                unfocusedBorderColor = TextSecondary.copy(alpha = 0.3f),
-                focusedTextColor = TextPrimary,
-                unfocusedTextColor = TextPrimary
-            ),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            singleLine = true
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
+        // Single action button
         Button(
             onClick = {
-                if (targetIP.isNotBlank() && commandType.isNotBlank()) {
-                    val cmd = TailnetCommand(
-                        id = System.currentTimeMillis().toString(),
-                        targetDevice = targetIP,
-                        commandType = commandType,
-                        payload = payload
-                    )
-                    sentCommands = listOf(cmd) + sentCommands
-                    // TODO: Actually send via socket/HTTP to target
-                    targetIP = ""
-                    commandType = ""
-                    payload = ""
+                // Demo: cycle through states
+                vertexStates = vertexStates.map { current ->
+                    val nextOrdinal = (current.ordinal + 1) % VertexState.entries.size
+                    VertexState.entries[nextOrdinal]
                 }
             },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(8.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = NeonCyan)
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Black,
+                contentColor = White
+            )
         ) {
-            Icon(Icons.Default.Send, contentDescription = null, tint = DarkBackground)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("EXECUTE", color = DarkBackground, fontWeight = FontWeight.Bold)
+            Text("PING NETWORK", style = MaterialTheme.typography.titleMedium)
+        }
+    }
+}
+
+@Composable
+fun PentagonVisualizer(
+    states: List<VertexState>,
+    modifier: Modifier = Modifier
+) {
+    Canvas(modifier = modifier) {
+        val centerX = size.width / 2f
+        val centerY = size.height / 2f
+        val radius = size.minDimension * 0.35f
+
+        // Pentagon vertex angles (starting from top, going clockwise)
+        // -90 degrees is top
+        val angles = List(5) { i ->
+            Math.toRadians(-90.0 + (i * 72.0)).toFloat()
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
-
-        if (sentCommands.isNotEmpty()) {
-            Text(
-                "HISTORY",
-                fontSize = 12.sp,
-                color = TextSecondary,
-                letterSpacing = 2.sp,
-                fontWeight = FontWeight.Bold
+        // Calculate vertex positions
+        val vertices = angles.map { angle ->
+            Offset(
+                centerX + radius * cos(angle),
+                centerY + radius * sin(angle)
             )
-            Spacer(modifier = Modifier.height(8.dp))
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(sentCommands) { cmd ->
-                    CommandHistoryItem(cmd)
+        }
+
+        // Draw connecting lines between vertices
+        for (i in vertices.indices) {
+            val start = vertices[i]
+            val end = vertices[(i + 1) % vertices.size]
+            drawLine(
+                color = LightGray,
+                start = start,
+                end = end,
+                strokeWidth = 1.5f
+            )
+        }
+
+        // Draw vertex dots based on state
+        vertices.forEachIndexed { index, pos ->
+            when (states[index]) {
+                VertexState.OFFLINE -> {
+                    // Empty: small gray ring
+                    drawCircle(
+                        color = LightGray,
+                        radius = 6f,
+                        center = pos,
+                        style = Stroke(width = 1.5f)
+                    )
+                }
+                VertexState.CONNECTING -> {
+                    // Small filled dot
+                    drawCircle(
+                        color = Gray,
+                        radius = 5f,
+                        center = pos
+                    )
+                }
+                VertexState.ONLINE -> {
+                    // Medium filled dot
+                    drawCircle(
+                        color = Black,
+                        radius = 7f,
+                        center = pos
+                    )
+                }
+                VertexState.ACTIVE -> {
+                    // Large filled dot
+                    drawCircle(
+                        color = Black,
+                        radius = 10f,
+                        center = pos
+                    )
+                    // Ring around it
+                    drawCircle(
+                        color = Black,
+                        radius = 14f,
+                        center = pos,
+                        style = Stroke(width = 1.5f)
+                    )
+                }
+                VertexState.ERROR -> {
+                    // Ring (empty circle with thicker border)
+                    drawCircle(
+                        color = Black,
+                        radius = 8f,
+                        center = pos,
+                        style = Stroke(width = 2f)
+                    )
                 }
             }
         }
     }
-}
-
-@Composable
-fun CommandHistoryItem(cmd: TailnetCommand) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBackground)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    cmd.commandType.uppercase(),
-                    color = NeonCyan,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp
-                )
-                Text(
-                    cmd.status.name,
-                    color = when (cmd.status) {
-                        CommandStatus.COMPLETED -> StatusOnline
-                        CommandStatus.FAILED -> StatusOffline
-                        else -> NeonPink
-                    },
-                    fontSize = 11.sp
-                )
-            }
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                "→ ${cmd.targetDevice}",
-                color = TextSecondary,
-                fontSize = 12.sp,
-                fontFamily = FontFamily.Monospace
-            )
-            if (cmd.payload.isNotBlank()) {
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    cmd.payload,
-                    color = TextPrimary.copy(alpha = 0.7f),
-                    fontSize = 12.sp
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun LogsTab() {
-    val logs = remember { getSampleLogs() }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        Text(
-            "EVENT LOG",
-            fontSize = 12.sp,
-            color = TextSecondary,
-            letterSpacing = 2.sp,
-            fontWeight = FontWeight.Bold
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            items(logs) { log ->
-                LogLine(log)
-            }
-        }
-    }
-}
-
-@Composable
-fun LogLine(text: String) {
-    val color = when {
-        text.contains("ERROR") -> StatusOffline
-        text.contains("SUCCESS") -> StatusOnline
-        text.contains("CONNECT") -> NeonCyan
-        else -> TextSecondary
-    }
-
-    Text(
-        text = text,
-        color = color,
-        fontSize = 12.sp,
-        fontFamily = FontFamily.Monospace,
-        lineHeight = 18.sp
-    )
-}
-
-// Helpers (replace with real Tailscale API calls later)
-fun getLocalTailnetInfo(): TailnetDevice {
-    return TailnetDevice(
-        name = "hive-android",
-        tailscaleIP = "100.64.0.1",
-        os = "Android",
-        status = DeviceStatus.ONLINE,
-        lastSeen = "now"
-    )
-}
-
-fun getSamplePeers(): List<TailnetDevice> {
-    return listOf(
-        TailnetDevice("adderstack", "100.64.0.2", "Linux", DeviceStatus.ONLINE, "2 min ago"),
-        TailnetDevice("ryans-macbook", "100.64.0.3", "macOS", DeviceStatus.ONLINE, "now"),
-        TailnetDevice("home-server", "100.64.0.4", "Linux", DeviceStatus.OFFLINE, "3 hours ago"),
-        TailnetDevice("pi-hole", "100.64.0.5", "Linux", DeviceStatus.ONLINE, "now")
-    )
-}
-
-fun getSampleLogs(): List<String> {
-    return listOf(
-        "[20:45:12] CONNECT Tailnet mesh established",
-        "[20:45:10] SUCCESS Peer handshake: adderstack",
-        "[20:45:08] INFO Local IP assigned: 100.64.0.1",
-        "[20:44:55] CONNECT Peer discovered: ryans-macbook",
-        "[20:44:30] WARN home-server unreachable (timeout)",
-        "[20:43:00] SUCCESS DERP relay connected: nyc"
-    )
 }
 
 @Preview(showBackground = true)
 @Composable
-fun HiveDashboardPreview() {
+fun HiveScreenPreview() {
     HiveTheme {
-        HiveDashboard()
+        HiveScreen()
     }
 }
