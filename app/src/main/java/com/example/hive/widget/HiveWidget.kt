@@ -16,8 +16,6 @@ import androidx.glance.layout.*
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
-import androidx.glance.unit.TextUnit
-import androidx.glance.unit.TextUnitType
 import com.example.hive.MainActivity
 import com.example.hive.R
 
@@ -58,8 +56,7 @@ fun HiveWidgetContent() {
             Text(
                 text = "▲",
                 style = TextStyle(
-                    color = ColorProvider(R.color.black),
-                    fontSize = TextUnit(24f, TextUnitType.Sp)
+                    color = ColorProvider(R.color.black)
                 )
             )
         }
@@ -78,8 +75,7 @@ fun HiveWidgetContent() {
             Text(
                 text = "▼",
                 style = TextStyle(
-                    color = ColorProvider(R.color.black),
-                    fontSize = TextUnit(24f, TextUnitType.Sp)
+                    color = ColorProvider(R.color.black)
                 )
             )
         }
