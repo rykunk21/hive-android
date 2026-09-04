@@ -6,6 +6,9 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -68,24 +71,60 @@ fun HiveScreen() {
 
         Spacer(modifier = Modifier.height(40.dp))
 
-        // Single action button
-        Button(
-            onClick = {
-                // Demo: cycle through states
-                vertexStates = vertexStates.map { current ->
-                    val nextOrdinal = (current.ordinal + 1) % VertexState.entries.size
-                    VertexState.entries[nextOrdinal]
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Black,
-                contentColor = White
-            )
+        // Two buttons side by side with arrows
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("PING NETWORK", style = MaterialTheme.typography.titleMedium)
+            // Up arrow button
+            Button(
+                onClick = {
+                    // Demo: advance states forward
+                    vertexStates = vertexStates.map { current ->
+                        val nextOrdinal = (current.ordinal + 1) % VertexState.entries.size
+                        VertexState.entries[nextOrdinal]
+                    }
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(56.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Black,
+                    contentColor = White
+                )
+            ) {
+                Icon(
+                    Icons.Default.KeyboardArrowUp,
+                    contentDescription = "Up"
+                )
+            }
+
+            // Down arrow button
+            Button(
+                onClick = {
+                    // Demo: reverse states
+                    vertexStates = vertexStates.map { current ->
+                        val prevOrdinal = if (current.ordinal - 1 < 0) {
+                            VertexState.entries.size - 1
+                        } else {
+                            current.ordinal - 1
+                        }
+                        VertexState.entries[prevOrdinal]
+                    }
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(56.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Black,
+                    contentColor = White
+                )
+            ) {
+                Icon(
+                    Icons.Default.KeyboardArrowDown,
+                    contentDescription = "Down"
+                )
+            }
         }
     }
 }
@@ -98,26 +137,34 @@ fun PentagonVisualizer(
     Canvas(modifier = modifier) {
         val centerX = size.width / 2f
         val centerY = size.height / 2f
-        val radius = size.minDimension * 0.35f
+        val outerRadius = size.minDimension * 0.38f
+        val innerRadius = size.minDimension * 0.20f
 
         // Pentagon vertex angles (starting from top, going clockwise)
-        // -90 degrees is top
         val angles = List(5) { i ->
             Math.toRadians(-90.0 + (i * 72.0)).toFloat()
         }
 
-        // Calculate vertex positions
-        val vertices = angles.map { angle ->
+        // Outer pentagon vertices
+        val outerVertices = angles.map { angle ->
             Offset(
-                centerX + radius * cos(angle),
-                centerY + radius * sin(angle)
+                centerX + outerRadius * cos(angle),
+                centerY + outerRadius * sin(angle)
             )
         }
 
-        // Draw connecting lines between vertices
-        for (i in vertices.indices) {
-            val start = vertices[i]
-            val end = vertices[(i + 1) % vertices.size]
+        // Inner pentagon vertices (for star lines)
+        val innerVertices = angles.map { angle ->
+            Offset(
+                centerX + innerRadius * cos(angle),
+                centerY + innerRadius * sin(angle)
+            )
+        }
+
+        // Draw outer pentagon lines
+        for (i in outerVertices.indices) {
+            val start = outerVertices[i]
+            val end = outerVertices[(i + 1) % outerVertices.size]
             drawLine(
                 color = LightGray,
                 start = start,
@@ -126,11 +173,29 @@ fun PentagonVisualizer(
             )
         }
 
+        // Draw inner star lines (connecting every other outer vertex)
+        for (i in outerVertices.indices) {
+            val start = outerVertices[i]
+            val end = outerVertices[(i + 2) % outerVertices.size]
+            drawLine(
+                color = LightGray.copy(alpha = 0.5f),
+                start = start,
+                end = end,
+                strokeWidth = 1f
+            )
+        }
+
+        // Draw center dot
+        drawCircle(
+            color = if (states.count { it == VertexState.ONLINE || it == VertexState.ACTIVE } >= 3) Black else LightGray,
+            radius = 5f,
+            center = Offset(centerX, centerY)
+        )
+
         // Draw vertex dots based on state
-        vertices.forEachIndexed { index, pos ->
+        outerVertices.forEachIndexed { index, pos ->
             when (states[index]) {
                 VertexState.OFFLINE -> {
-                    // Empty: small gray ring
                     drawCircle(
                         color = LightGray,
                         radius = 6f,
@@ -139,7 +204,6 @@ fun PentagonVisualizer(
                     )
                 }
                 VertexState.CONNECTING -> {
-                    // Small filled dot
                     drawCircle(
                         color = Gray,
                         radius = 5f,
@@ -147,7 +211,6 @@ fun PentagonVisualizer(
                     )
                 }
                 VertexState.ONLINE -> {
-                    // Medium filled dot
                     drawCircle(
                         color = Black,
                         radius = 7f,
@@ -155,13 +218,11 @@ fun PentagonVisualizer(
                     )
                 }
                 VertexState.ACTIVE -> {
-                    // Large filled dot
                     drawCircle(
                         color = Black,
                         radius = 10f,
                         center = pos
                     )
-                    // Ring around it
                     drawCircle(
                         color = Black,
                         radius = 14f,
@@ -170,7 +231,6 @@ fun PentagonVisualizer(
                     )
                 }
                 VertexState.ERROR -> {
-                    // Ring (empty circle with thicker border)
                     drawCircle(
                         color = Black,
                         radius = 8f,
