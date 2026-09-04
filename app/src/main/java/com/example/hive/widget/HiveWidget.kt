@@ -1,11 +1,12 @@
 package com.example.hive.widget
 
 import android.content.Context
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
+import androidx.glance.ImageProvider
 import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
@@ -47,12 +48,12 @@ fun HiveWidgetContent() {
         // 11% left spacer
         Spacer(GlanceModifier.defaultWeight())
 
-        // Up arrow button (35%)
+        // Up arrow button (35%) with black border
         Box(
             modifier = GlanceModifier
                 .defaultWeight()
                 .fillMaxHeight()
-                .background(ColorProvider(R.color.white))
+                .background(ImageProvider(R.drawable.widget_button_bordered_bg))
                 .cornerRadius(18.dp)
                 .clickable(actionStartActivity<MainActivity>()),
             contentAlignment = Alignment.Center
@@ -60,7 +61,8 @@ fun HiveWidgetContent() {
             Text(
                 text = "▲",
                 style = TextStyle(
-                    color = ColorProvider(R.color.black)
+                    color = ColorProvider(R.color.black),
+                    fontSize = 28.sp
                 )
             )
         }
@@ -68,12 +70,12 @@ fun HiveWidgetContent() {
         // 8% middle spacer
         Spacer(GlanceModifier.defaultWeight())
 
-        // Down arrow button (35%)
+        // Down arrow button (35%) with black border
         Box(
             modifier = GlanceModifier
                 .defaultWeight()
                 .fillMaxHeight()
-                .background(ColorProvider(R.color.white))
+                .background(ImageProvider(R.drawable.widget_button_bordered_bg))
                 .cornerRadius(18.dp)
                 .clickable(actionStartActivity<MainActivity>()),
             contentAlignment = Alignment.Center
@@ -81,7 +83,8 @@ fun HiveWidgetContent() {
             Text(
                 text = "▼",
                 style = TextStyle(
-                    color = ColorProvider(R.color.black)
+                    color = ColorProvider(R.color.black),
+                    fontSize = 28.sp
                 )
             )
         }
