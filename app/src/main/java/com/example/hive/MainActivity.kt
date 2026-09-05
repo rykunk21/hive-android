@@ -2,6 +2,7 @@ package com.example.hive
 
 import android.os.Bundle
 import android.webkit.WebChromeClient
+import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
@@ -10,7 +11,6 @@ import androidx.activity.enableEdgeToEdge
 class MainActivity : ComponentActivity() {
 
     companion object {
-        // Point this at your local HTTP server on the tailnet
         const val DASHBOARD_URL = "http://adderstack:8080"
     }
 
@@ -19,14 +19,43 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         val webView = WebView(this).apply {
-            // Keep session state across config changes
-            settings.javaScriptEnabled = true
-            settings.domStorageEnabled = true
-            settings.allowFileAccess = false
+            settings.apply {
+                javaScriptEnabled = true
+                domStorageEnabled = true
+                databaseEnabled = true
+                cacheMode = WebSettings.LOAD_DEFAULT
+                useWideViewPort = true
+                loadWithOverviewMode = true
+                setSupportZoom(true)
+                builtInZoomControls = true
+                displayZoomControls = false
+            }
 
-            // Let the WebView handle links internally
-            webViewClient = WebViewClient()
-            webChromeClient = WebChromeClient()
+            // Force background to white so we don't get black-on-black on e-ink
+            setBackgroundColor(0xFFFFFFFF.toInt())
+
+            // Log console messages for debugging
+            webChromeClient = object : WebChromeClient() {
+                override fun onConsoleMessage(message: android.webkit.ConsoleMessage): Boolean {
+                    android.util.Log.d("WebView", "${message.message()} -- From line ${message.lineNumber()} of ${message.sourceId()}")
+                    return true
+                }
+            }
+
+            // Catch load errors
+            webViewClient = object : WebViewClient() {
+                override fun onReceivedError(
+                    view: WebView,
+                    request: android.webkit.WebResourceRequest,
+                    error: android.webkit.WebResourceError
+                ) {
+                    android.util.Log.e("WebView", "Error loading ${request.url}: ${error.description}")
+                }
+
+                override fun onPageFinished(view: WebView, url: String) {
+                    android.util.Log.d("WebView", "Page finished loading: $url")
+                }
+            }
 
             loadUrl(DASHBOARD_URL)
         }
@@ -34,14 +63,15 @@ class MainActivity : ComponentActivity() {
         setContentView(webView)
     }
 
-    // Handle back button navigation within the WebView
+    @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
-        val webView = findViewById<WebView>(android.R.id.content)
-            ?.let { (it as? android.view.ViewGroup)?.getChildAt(0) as? WebView }
+        val webView = (findViewById<android.view.View>(android.R.id.content) as? android.view.ViewGroup)
+            ?.getChildAt(0) as? WebView
 
         if (webView?.canGoBack() == true) {
             webView.goBack()
         } else {
+            @Suppress("DEPRECATION")
             super.onBackPressed()
         }
     }
