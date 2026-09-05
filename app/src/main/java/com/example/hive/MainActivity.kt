@@ -11,7 +11,7 @@ class MainActivity : ComponentActivity() {
 
     companion object {
         // Point this at your local HTTP server on the tailnet
-        const val DASHBOARD_URL = "http://100.119.100.19:8080"
+        const val DASHBOARD_URL = "http://adderstack:8080"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
